@@ -20,6 +20,7 @@ MANIFEST
 dist/
 build/
 boost/
+lib/
 
 # Backup files
 *~.nib

@@ -1,0 +1,53 @@
+// movie scripter
+//
+// in general labels can be used as a target of an onmouse or ondone event listener
+// in general hitting a "return" puts the script engine on hold until events are resolved
+// in general event listeners are cleared after any event is trigered
+// in general choosing to play,load,stop,hide,show a named movie makes that movie the focus of speed,range,onmouse
+//
+// specific and fun movie commands
+//
+//   play = load and/or play a movie ( if loaded it just sets it as the focus )
+//   load = load and or just set an already loaded movie as the focus
+//   stop = same as pause
+//   pause = same as stop
+//   hide = stop and hide
+//   show = just unhide
+//   range = start end of movie area to play
+//   speed = speed rate where 1 is normal
+//   reset = reset all movie properties to default
+//
+// features to write still
+//
+//   loop n times or forever
+//   pingpong
+//   speed including negative or superfast
+//   record cursor
+//   playback cursor file for speed
+//   playback cursor file for mouse
+
+
+start_stuff_up
+
+ hide /zerotheoremshared/day00/The_black_hole_vertical_v001.mov
+ hide /zerotheoremshared/s06_comp_V05_h264.mov
+
+blackhole_scene
+
+ play /zerotheoremshared/day00/The_black_hole_vertical_v001.mov
+ range 10 2000
+ onmouse 0   0 100 100 entropy_scene
+ onmouse 0 100 100 100 end_scene
+ onmouse 0 200 100 100 blackhole_scene
+ ondone entropy_scene
+ onspeed
+ return
+
+entropy_scene
+
+ hide /zerotheoremshared/day00/The_black_hole_vertical_v001.mov
+ play /zerotheoremshared/s06_comp_V05_h264.mov
+ range 10 2000
+ onmouse 0 0 1000 1000 blackhole_scene
+ return
+

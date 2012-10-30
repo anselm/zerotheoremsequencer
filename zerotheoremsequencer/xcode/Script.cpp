@@ -6,6 +6,8 @@
 
 #include "boost/bind.hpp"
 
+#include "ServerWrapper.h"
+
 struct BoxArea {
     int x,y,w,h,c;
     string target;
@@ -21,7 +23,7 @@ void script_load () {
     
     script.clear();
 
-    fs::path path = "/zerotheoremshared/script.txt"; //getOpenFilePath();
+    fs::path path = DEFAULTFOLDER "/script.txt"; //getOpenFilePath();
 	if( path.empty() ) return;
 
     string line;
@@ -268,7 +270,9 @@ void Script::setup() {
     script_load();
     script_run_till_done();
 
-   // regions.push_back(new Region(  100, 200, 200, 75,   0,REGION_FPS,""));
+    serverStart();
+
+    // regions.push_back(new Region(  100, 200, 200, 75,   0,REGION_FPS,""));
 
 }
 
@@ -286,6 +290,12 @@ void Script::mouseDown(MouseEvent event) {
 
 void Script::keyDown( KeyEvent event ) {
 
+    if(event.getChar() == 'p') {
+        // [server broadcastMessage:@"hello"];
+        console() << "Telling network listeners to play/pause" << endl;
+        serverMessage("pause");
+    }
+    
     // reset by resetting stopping and hiding all regions and then reload script from disk
     if(event.getChar() == 'r') {
         for(int i = 0; i < regions.size();i++) {
@@ -312,12 +322,6 @@ void Script::keyDown( KeyEvent event ) {
     }
 
 }
-
-// todo
-//
-// - have script auto detect changes
-// - load other types
-// - focus
 
 
 

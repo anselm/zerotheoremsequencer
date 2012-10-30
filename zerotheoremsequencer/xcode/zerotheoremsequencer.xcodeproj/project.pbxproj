@@ -15,8 +15,11 @@
 		00B784B60FF439BC000DE1D7 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 00B784B20FF439BC000DE1D7 /* CoreAudio.framework */; };
 		00BAE65A0E7ED9C10018A608 /* ZeroTheorem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 00BAE6590E7ED9C10018A608 /* ZeroTheorem.cpp */; };
 		00CCAF15116A9FEE008396D5 /* CinderApp.icns in Resources */ = {isa = PBXBuildFile; fileRef = 00CCAF14116A9FEE008396D5 /* CinderApp.icns */; };
-		435D11F5163836D800D652CB /* SimpleHTTPConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = 435D11F2163836D800D652CB /* SimpleHTTPConnection.m */; };
-		435D11F6163836D800D652CB /* SimpleHTTPServer.m in Sources */ = {isa = PBXBuildFile; fileRef = 435D11F4163836D800D652CB /* SimpleHTTPServer.m */; };
+		4396C222163EC01D008BA00D /* Connection.m in Sources */ = {isa = PBXBuildFile; fileRef = 4396C20B163EC01D008BA00D /* Connection.m */; };
+		4396C226163EC01D008BA00D /* Server.m in Sources */ = {isa = PBXBuildFile; fileRef = 4396C215163EC01D008BA00D /* Server.m */; };
+		4396C227163EC01D008BA00D /* ServerBrowser.m in Sources */ = {isa = PBXBuildFile; fileRef = 4396C217163EC01D008BA00D /* ServerBrowser.m */; };
+		4396C22C163EC77D008BA00D /* Blackhole.m in Sources */ = {isa = PBXBuildFile; fileRef = 4396C22B163EC77D008BA00D /* Blackhole.m */; };
+		4396C231163EC992008BA00D /* ServerWrapper.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4396C230163EC992008BA00D /* ServerWrapper.mm */; };
 		43E2D0631634603200CB63A3 /* script.txt in Resources */ = {isa = PBXBuildFile; fileRef = 43E2D0621634603200CB63A3 /* script.txt */; };
 		43E2D0661634652F00CB63A3 /* Script.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43E2D0641634652F00CB63A3 /* Script.cpp */; };
 		5323E6B20EAFCA74003A9687 /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5323E6B10EAFCA74003A9687 /* CoreVideo.framework */; };
@@ -46,10 +49,16 @@
 		13E42FB307B3F0F600E4EEF1 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = /System/Library/Frameworks/CoreData.framework; sourceTree = "<absolute>"; };
 		29B97324FDCFA39411CA2CEA /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		29B97325FDCFA39411CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
-		435D11F1163836D800D652CB /* SimpleHTTPConnection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SimpleHTTPConnection.h; sourceTree = "<group>"; };
-		435D11F2163836D800D652CB /* SimpleHTTPConnection.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SimpleHTTPConnection.m; sourceTree = "<group>"; };
-		435D11F3163836D800D652CB /* SimpleHTTPServer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SimpleHTTPServer.h; sourceTree = "<group>"; };
-		435D11F4163836D800D652CB /* SimpleHTTPServer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SimpleHTTPServer.m; sourceTree = "<group>"; };
+		4396C20A163EC01D008BA00D /* Connection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Connection.h; sourceTree = "<group>"; };
+		4396C20B163EC01D008BA00D /* Connection.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Connection.m; sourceTree = "<group>"; };
+		4396C214163EC01D008BA00D /* Server.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Server.h; sourceTree = "<group>"; };
+		4396C215163EC01D008BA00D /* Server.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Server.m; sourceTree = "<group>"; };
+		4396C216163EC01D008BA00D /* ServerBrowser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ServerBrowser.h; sourceTree = "<group>"; };
+		4396C217163EC01D008BA00D /* ServerBrowser.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ServerBrowser.m; sourceTree = "<group>"; };
+		4396C22A163EC77D008BA00D /* Blackhole.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Blackhole.h; sourceTree = "<group>"; };
+		4396C22B163EC77D008BA00D /* Blackhole.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Blackhole.m; sourceTree = "<group>"; };
+		4396C22E163EC943008BA00D /* ServerWrapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ServerWrapper.h; sourceTree = "<group>"; };
+		4396C230163EC992008BA00D /* ServerWrapper.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ServerWrapper.mm; sourceTree = "<group>"; };
 		43E2D0621634603200CB63A3 /* script.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = script.txt; sourceTree = "<group>"; };
 		43E2D0641634652F00CB63A3 /* Script.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Script.cpp; sourceTree = "<group>"; };
 		43E2D0651634652F00CB63A3 /* Script.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Script.h; sourceTree = "<group>"; };
@@ -105,19 +114,17 @@
 		080E96DDFE201D6D7F000001 /* Source */ = {
 			isa = PBXGroup;
 			children = (
-				91A0873C1632B65700A5A4A2 /* Cube.h */,
 				43E2D0651634652F00CB63A3 /* Script.h */,
-				435D11F1163836D800D652CB /* SimpleHTTPConnection.h */,
-				435D11F2163836D800D652CB /* SimpleHTTPConnection.m */,
-				435D11F3163836D800D652CB /* SimpleHTTPServer.h */,
-				435D11F4163836D800D652CB /* SimpleHTTPServer.m */,
-				91A087351632B16600A5A4A2 /* Deck.h */,
-				91A087321632AE9400A5A4A2 /* ZeroTheorem.h */,
-				91A0873A1632B3F800A5A4A2 /* Region.h */,
 				43E2D0641634652F00CB63A3 /* Script.cpp */,
+				91A0873A1632B3F800A5A4A2 /* Region.h */,
+				4396C22A163EC77D008BA00D /* Blackhole.h */,
+				4396C22B163EC77D008BA00D /* Blackhole.m */,
 				91A087391632B3F800A5A4A2 /* Region.cpp */,
+				91A087351632B16600A5A4A2 /* Deck.h */,
 				91A087341632B16600A5A4A2 /* Deck.cpp */,
+				91A0873C1632B65700A5A4A2 /* Cube.h */,
 				91A0872D1632AE5C00A5A4A2 /* Cube.cpp */,
+				91A087321632AE9400A5A4A2 /* ZeroTheorem.h */,
 				00BAE6590E7ED9C10018A608 /* ZeroTheorem.cpp */,
 			);
 			name = Source;
@@ -161,6 +168,7 @@
 		29B97314FDCFA39411CA2CEA /* zerotheoremsequencer */ = {
 			isa = PBXGroup;
 			children = (
+				4396C202163EC01D008BA00D /* chatty */,
 				080E96DDFE201D6D7F000001 /* Source */,
 				91A087381632B38900A5A4A2 /* blackdeck */,
 				29B97317FDCFA39411CA2CEA /* Resources */,
@@ -190,6 +198,22 @@
 				1058C7A2FEA54F0111CA2CBB /* Other Frameworks */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		4396C202163EC01D008BA00D /* chatty */ = {
+			isa = PBXGroup;
+			children = (
+				4396C20A163EC01D008BA00D /* Connection.h */,
+				4396C20B163EC01D008BA00D /* Connection.m */,
+				4396C230163EC992008BA00D /* ServerWrapper.mm */,
+				4396C22E163EC943008BA00D /* ServerWrapper.h */,
+				4396C214163EC01D008BA00D /* Server.h */,
+				4396C215163EC01D008BA00D /* Server.m */,
+				4396C216163EC01D008BA00D /* ServerBrowser.h */,
+				4396C217163EC01D008BA00D /* ServerBrowser.m */,
+			);
+			name = chatty;
+			path = ../chatty;
 			sourceTree = "<group>";
 		};
 		91A087381632B38900A5A4A2 /* blackdeck */ = {
@@ -279,8 +303,11 @@
 				91A087361632B16600A5A4A2 /* Deck.cpp in Sources */,
 				91A0873B1632B3F800A5A4A2 /* Region.cpp in Sources */,
 				43E2D0661634652F00CB63A3 /* Script.cpp in Sources */,
-				435D11F5163836D800D652CB /* SimpleHTTPConnection.m in Sources */,
-				435D11F6163836D800D652CB /* SimpleHTTPServer.m in Sources */,
+				4396C222163EC01D008BA00D /* Connection.m in Sources */,
+				4396C226163EC01D008BA00D /* Server.m in Sources */,
+				4396C227163EC01D008BA00D /* ServerBrowser.m in Sources */,
+				4396C22C163EC77D008BA00D /* Blackhole.m in Sources */,
+				4396C231163EC992008BA00D /* ServerWrapper.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -302,13 +329,11 @@
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(HOME)/Applications";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"$(SRCROOT)/../../../blocks/opencv/lib/macosx\"",
-				);
+				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = "\"$(CINDER_PATH)/lib/libcinder_d.a\"";
 				PRODUCT_NAME = zerotheoremsequencer;
+				USER_HEADER_SEARCH_PATHS = "\"$(CINDER_PATH)/include\" ../include";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
@@ -329,14 +354,12 @@
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(HOME)/Applications";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"$(SRCROOT)/../../../blocks/opencv/lib/macosx\"",
-				);
+				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = "\"$(CINDER_PATH)/lib/libcinder.a\"";
 				PRODUCT_NAME = zerotheoremsequencer;
 				STRIP_INSTALLED_PRODUCT = YES;
+				USER_HEADER_SEARCH_PATHS = "\"$(CINDER_PATH)/include\" ../include";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Release;

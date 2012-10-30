@@ -17,95 +17,6 @@ float framerate = 0.0f;
 float frame_median_rate = FRAMERATE_MEDIAN;
 float frame_ideal_speed = FRAMERATE_MEDIAN/FRAMERATE_IDEAL;
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Group Black Hole
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-class GroupBlackHole: public Group {
-public:
-    Region* hole;
-    Region* anon;
-    int mode = 1;
-
-    void setMode(int mode) {
-        switch(mode) {
-            case 0:
-            case 1:
-                if(1) {
-                    hole->restart();
-                    anon->hide();
-                }
-                break;
-
-            case 2:
-                if(1) {
-                    hole->hide();
-                    anon->reset();
-                    anon->play();
-                }
-                break;
-
-            case 3:
-                if(1) {
-                    hole->hide();
-                    anon->restart();
-                    anon->movie.seekToFrame( anon->movie.getNumFrames()-3);
-                    anon->cframe = anon->movie.getNumFrames()-3;
-                }
-                break;
-        }
-    }
-
-    
-    void update() {
-        // console() << "anon is at " << anon->movie.getFramerate() << " " << anon->movie.getCurrentTime() << endl;
-        // hole->movie.setRate(frame_median_rate);
-        // anon->movie.setRate(frame_median_rate);
-    }
-
-    void setup() {
-
-        regions.push_back(new Region( 0,HEIGHT,   0,   0,   0,REGION_MOVIE,"/zerotheoremshared/day00/The_black_hole_vertical_v001.mov"));
-        hole = regions.back();
-        hole->play();
-    //    hole->movie_stop();
-
-/*
-        regions.push_back(new Region( 0,     0,   0,   0,   0,REGION_MOVIE,"/zerotheoremshared/s06_comp_V05_h264.mov"));
-        anon = regions.back();
-        anon->movie.setLoop( false, false );
-//        anon->movie.play();
-        anon->rotate = 0;
-        anon->visible = 0;
-*/
-        //regions.push_back(new Region(  400, 400, DECKWIDTH/DECKRATIO, DECKHEIGHT/DECKRATIO,   0,REGION_DECKV,""));
-
-       // regions.push_back(new Region(  100, 200, 200, 75,   0,REGION_FPS,""));
-
-       // regions.push_back(new Region(  355,   0,   0,1080,   0,REGION_WORDS, "Anselm's test of  multiple full screen large videos and a test of the blackmagic playback in real time as an overlay "));
-    }
-
-    void mouseDown(MouseEvent event) {
-        mode++;
-        if(mode>3) mode = 1;
-        setMode(mode);
-    }
-
-    void keyDown( KeyEvent event ) {
-        switch(event.getChar()) {
-            case '1': setMode(1); break;
-            case '2': setMode(2); break;
-            case '3': setMode(3); break;
-            default: break;
-        }
-    }
-
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Cinder app helper class
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 class QTimeAdvApp : public AppBasic {
 public:
 
@@ -123,9 +34,12 @@ public:
         // glHint(GL_LINE_SMOOTH_HINT,GL_NICEST);
         //glDisable(GL_MULTISAMPLE);
         timer.start();
+        loadstate();
     }
 
     void setup() {
+
+    
         // currentGroup = new GroupCube();
         //currentGroup = new GroupBlackHole();
         currentGroup = new Script();
@@ -133,7 +47,24 @@ public:
     }
 
     int m = 1;
+    float x=0,y=0,z=0;
     
+    void savestate() {
+        FILE* fp = fopen( DEFAULTFOLDER "/zerostate.txt","w");
+        if(fp) {
+            fprintf(fp,"%f %f %f",x,y,z);
+            fclose(fp);
+        }
+    }
+    
+    void loadstate() {
+        FILE* fp = fopen( DEFAULTFOLDER "/zerostate.txt","r");
+        if(fp) {
+            fscanf(fp,"%f %f %f",&x,&y,&z);
+            fclose(fp);
+        }
+    }
+
 	void keyDown( KeyEvent event ) {
 
         switch(event.getChar()) {
@@ -144,12 +75,12 @@ public:
         }
 
         switch(event.getCode()) {
-            case KeyEvent::KEY_RIGHT:  glTranslatef(1.0,0.0,0.0); return;
-            case KeyEvent::KEY_LEFT:   glTranslatef(-1.0,0.0,0.0); return;
-            case KeyEvent::KEY_UP:    glTranslatef(0.0,-1.0,0.0); return;
-            case KeyEvent::KEY_DOWN:  glTranslatef(0.0,1.0,0.0); return;
-            case 269: glTranslatef(0.0,0.0,-1.1); return;
-            case 61: glTranslatef(0.0,0.0,1.1); return;
+            case KeyEvent::KEY_RIGHT:  x++; savestate(); return; //glTranslatef(1.0,0.0,0.0); return;
+            case KeyEvent::KEY_LEFT:   x--; savestate(); return; //glTranslatef(-1.0,0.0,0.0); return;
+            case KeyEvent::KEY_UP:    y--; savestate(); return; //glTranslatef(0.0,-1.0,0.0); return;
+            case KeyEvent::KEY_DOWN:  y++; savestate(); return; //glTranslatef(0.0,1.0,0.0); return;
+            case 269: z -=1.1f; savestate(); return; //glTranslatef(0.0,0.0,-1.1); return;
+            case 61: z+=1.1f; savestate(); return; //glTranslatef(0.0,0.0,1.1); return;
             default: break;
         }
 
@@ -194,10 +125,13 @@ public:
             return;
         }
         gl::clear();
+        gl::pushMatrices();
+        glTranslatef(x,y,z);
         for( size_t m = 0; m < regions.size(); ++m ) {
             regions[m]->draw();
         }
         framerate = this->getAverageFps();
+        gl::popMatrices();
     }
 
     void mouseMove(MouseEvent event) {
@@ -225,56 +159,3 @@ public:
 
 CINDER_APP_BASIC( QTimeAdvApp, RendererGl(0) )
 
-
-/*
- 
-TODO
-
- - the remote viewer needs the ability to do things on command; wait, play something specific etc
-    i think i can modify a file from libcinder
-    and have it look at that as a web page
- 
- - i need a real reset
-
- - script detect changes
- 
-
-INTERACTIVE CUBE    
- 
- speed
-   - switch to 64 bit cinder for speed
-
- cube
- - inject real faces at right times
- 
- mouse
- - having a mouse that moves to the positions
- 
- conveyer belt
- - make the slidy things slide across and go down for a conveyer belt
- 
- streams and ribbons
- 
- <- have a box on the stream for picking
- - have stream be a bit jerky in general; more like film
- - grey strip at edge of selected
- - see about using zoomed versions of the stream images for the ribbonized view rather than small
- - stream should smoothly expand and shrink
- - stream shader should be more ribbony
- - often there are two stream tiles in a row why?
- 
- mouth
- - i gather the mouth is supposed to bounce around - also get which mouth animations to play when
- 
- small issues to check
- 
- - newer bottom codes? and the bottom codes are supposed to be paused at different points - when?
- - there are other variations of layouts?
- - randomize picking order and avoid dupes or let terry set this; also allow first one to be a dupe at the very end of course
- - let terry or somebody pick exactly which images to put on cube also
- - empower other people to pick which streams to show
- - get exact placement of all movies
- - look to smooth or antialias the texture i multiply against the backdrop on the cube
- - [low priority] remap cache could buffer surfaces so that we don't thrash disk as much? ( or can it? possibly not )
- 
- */

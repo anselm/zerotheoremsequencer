@@ -5,6 +5,7 @@
 #include "Deck.h"
 
 #include "boost/bind.hpp"
+#include "boost/algorithm/string/join.hpp"
 
 #include "ServerWrapper.h"
 
@@ -13,18 +14,35 @@ struct BoxArea {
     string target;
 };
 
+struct Trigger {
+    char key;
+    string command;
+};
+
 static vector<string> script;
+static vector<Trigger> triggers;
 static vector<BoxArea> onevents;
 static string ondone;
 static int script_pc = 0;
 static Region* focus;
+static fs::path path = DEFAULTFOLDER "/script.txt";
+static int loadcount = 0;
 
 void script_load () {
     
     script.clear();
+    triggers.clear();
 
-    fs::path path = DEFAULTFOLDER "/script.txt"; //getOpenFilePath();
-	if( path.empty() ) return;
+    if(!loadcount) {
+        loadcount++;
+        // load a file the first time in only - successive resets just reset
+        //fs::path path = DEFAULTFOLDER "/script_day_.txt"; //getOpenFilePath();
+        fs::path path_temp = getOpenFilePath();
+        if(!path_temp.empty()) {
+            path = path_temp;
+        }
+    }
+	if( path.empty() ) exit(0);
 
     string line;
     char buffer[1000];
@@ -63,24 +81,16 @@ void script_set_movie(const char* filename) {
     focus = r;
 }
 
-void script_run_till_done() {
+bool script_run_command(string command) {
 
-    while(1) {
-
-        // read next command
-        string command = script[script_pc];
+    // split it
+    vector <string> scratch = cinder::split( command, ' ' );
+    vector <string> fields;
+    for(int z = 0; z < scratch.size(); z++) {
+        if(scratch[z].size() > 0) fields.push_back(scratch[z]); // remove the spaces
+    }
         
-        // split it
-        vector <string> scratch = cinder::split( command, ' ' );
-        vector <string> fields;
-        for(int z = 0; z < scratch.size(); z++) {
-            if(scratch[z].size() > 0) fields.push_back(scratch[z]); // remove the spaces
-        }
-
-        if(fields.size() < 1) {
-            script_step();
-            continue;
-        }
+    if(fields.size()) {
 
         console() << "running " << command << endl;
         
@@ -126,12 +136,17 @@ void script_run_till_done() {
             if(focus) focus->reset();
         }
 
-        else if(term == "speed" && fields.size() > 1) {
+        else if((term == "rate" || term == "speed") && fields.size() > 1) {
             float rate = atof(fields[1].c_str());
             if(focus) focus->rate = rate;
             console() << "set " << focus->filename << " to speed " << rate << endl;
         }
-
+        else if((term == "fasterer") && fields.size() > 1) {
+            float rate = atof(fields[1].c_str());
+            for(int i = 0; i < regions.size(); i++) {
+                regions[i]->rate *= rate;
+            }
+        }
         else if(term == "play" && fields.size() > 1) {
             // find or load movie and start play from start
             script_set_movie(fields[1].c_str());
@@ -184,7 +199,6 @@ void script_run_till_done() {
             focus->range_low = low;
             focus->range_high = high;
             focus->done = 0;
-            
         }
 
         else if(term == "onmouse" && fields.size() > 5) {
@@ -233,17 +247,48 @@ void script_run_till_done() {
             focus->targetspeed = atof(fields[6].c_str());
         }
 
+        else if(term == "network") {
+            serverStart();
+            if(fields.size() > 1) {
+                const char* msg = fields[1].c_str();
+                const char* val = fields.size() < 3 ? "" : fields[2].c_str();
+                serverMessage(msg,val);
+            }
+        }
+
+        else if(term == "key" && fields.size() > 2) {
+            Trigger trigger;
+            trigger.key = fields[1].c_str()[0];
+            fields.erase(fields.begin()); // erase the "key" part of this
+            fields.erase(fields.begin()); // erase the "key" part of this
+            trigger.command = boost::algorithm::join(fields," "); // join back into a string
+            triggers.push_back(trigger); // push onto a stack
+        }
         
         // pingpong
         // animated effects on regions
         
         else if(term == "return") {
+            return 0;
+        }
+    }
+
+    return 1;
+}
+
+
+void script_run_till_done() {
+    while(1) {
+        string command = script[script_pc];
+        if(script_run_command(command)) {
+            script_step();
+        } else {
             break;
         }
-
-        script_step();
     }
 }
+
+
 void script_goto(string label) {
     if(focus)focus->done = 0;
     ondone = string("");
@@ -269,9 +314,6 @@ void Script::update() {
 void Script::setup() {
     script_load();
     script_run_till_done();
-
-    serverStart();
-
     // regions.push_back(new Region(  100, 200, 200, 75,   0,REGION_FPS,""));
 
 }
@@ -290,12 +332,26 @@ void Script::mouseDown(MouseEvent event) {
 
 void Script::keyDown( KeyEvent event ) {
 
+    for(int i = 0; i < triggers.size();i++) {
+        if(triggers[i].key == event.getChar()) {
+            script_run_command(triggers[i].command);
+        }
+    }
+/*
     if(event.getChar() == 'p') {
         // [server broadcastMessage:@"hello"];
-        console() << "Telling network listeners to play/pause" << endl;
-        serverMessage("pause");
+        console() << "Telling network listeners to toggle play/pause" << endl;
+        serverMessage("goto","9");
+        serverMessage("play","stuffnowdude");
     }
-    
+
+    if(event.getChar() == 'k') {
+        // [server broadcastMessage:@"hello"];
+        console() << "Telling network listeners to goto start and stop" << endl;
+        serverMessage("goto","0");
+        serverMessage("stop","you");
+    }
+  */
     // reset by resetting stopping and hiding all regions and then reload script from disk
     if(event.getChar() == 'r') {
         for(int i = 0; i < regions.size();i++) {

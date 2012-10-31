@@ -3,5 +3,5 @@ extern "C" {
     void serverStop();
     void browserStart();
     void browserStop();
-    void serverMessage(const char* msg);
+    void serverMessage(const char* msg, const char* val);
 }

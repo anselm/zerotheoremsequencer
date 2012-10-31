@@ -99,6 +99,11 @@ public:
         done = 0;
         rate = 1;
         targetx = targety = targetw = targeth = targetspeed = targetease = 0;
+        if(movie) {
+            w = movie.getWidth();
+            h = movie.getHeight();
+            nframes = movie.getNumFrames();
+        }
     }
 
     void restart() {
@@ -122,19 +127,23 @@ public:
         visible = 1;
         done = 0;
     }
+    
+    inline float signof(float val) { return (0.0 < val) - (val < 0.0); }
 
     void targetstep(float amount) {
         if(!targetspeed) return;
         if(targetease) {
-            x = (targetx-x)/2.0f * amount * targetspeed;
-            y = (targety-y)/2.0f * amount * targetspeed;
-            w = (targetw-w)/2.0f * amount * targetspeed;
-            h = (targeth-h)/2.0f * amount * targetspeed;
+            x += (targetx-x)/2.0f * amount * targetspeed;
+            y += (targety-y)/2.0f * amount * targetspeed;
+            w += (targetw-w)/2.0f * amount * targetspeed;
+            h += (targeth-h)/2.0f * amount * targetspeed;
         } else {
-            x = ((targetx-x)%2) * amount * targetspeed;
-            y = ((targety-y)%2) * amount * targetspeed;
-            w = ((targetw-w)%2) * amount * targetspeed;
-            h = ((targeth-h)%2) * amount * targetspeed;
+            float temp = signof(targetx-x);
+            console() << "blah" << temp << endl;
+            x += signof(targetx-x) * amount * targetspeed;
+            y += signof(targety-y) * amount * targetspeed;
+            w += signof(targetw-w) * amount * targetspeed;
+            h += signof(targeth-h) * amount * targetspeed;
         }
     }
     

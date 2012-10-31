@@ -39,8 +39,8 @@ using namespace ci;
 using namespace ci::app;
 using namespace std;
 
-#define WIDTH 800 // 1920
-#define HEIGHT 600 // 1080
+#define WIDTH 1920
+#define HEIGHT 1080
 #define DEFAULTFOLDER "/zerotheoremshared"
 
 class Group {

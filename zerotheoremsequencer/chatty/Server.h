@@ -11,6 +11,6 @@
 
 - (BOOL)start;
 - (void)stop;
-- (void)broadcastMessage:(NSString*)message;
+- (void)broadcastMessage:(NSDictionary*)packet;
 
 @end

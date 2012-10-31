@@ -160,11 +160,9 @@ static void serverAcceptCallback(CFSocketRef socket, CFSocketCallBackType type, 
     NSLog(@"server stopped");
 }
 
-- (void)broadcastMessage:(NSString*)message {
-    NSLog(@"broaddcasting %@",message);
+- (void)broadcastMessage:(NSDictionary*)packet {
     if(!clients || [clients count] < 1) return;
-    //NSDictionary* packet = [NSDictionary dictionaryWithObjectsAndKeys:message, @"message", name, @"from", nil];
-    [clients makeObjectsPerformSelector:@selector(sendNetworkPacket:) withObject:message];
+    [clients makeObjectsPerformSelector:@selector(sendNetworkPacket:) withObject:packet];
 }
 
 #pragma mark Bonjour

@@ -491,12 +491,22 @@ void Region::draw() {
                 glColor4f(0,1,2,1);
                 glPushMatrix();
                 // looks like it is an open gl box that is 2 units wide by 2 tall
-                glTranslatef(WIDTH/2-545,HEIGHT/2-33-100,0.0f);
-                glScalef(924/2*WIDTH/HEIGHT/2,-974/2/2,-1);
+//                glTranslatef(WIDTH/2-545,HEIGHT/2-33-100,0.0f);
+//                glScalef(924/2*WIDTH/HEIGHT/2,-974/2/2,-1);
+
+                // we translate to the desired position, but we have to subtract the width and height offset
+                glTranslatef(x,y,0.0f);
+
+                // since it is a 1 by 1 box if we scale it to the w,h then we should be sized right
+                glScalef(w/2.0f,h/2.0f,1.0f);
+
                 //glRotatef(180,0,0,1);
                 if(deckvideo && deckvideo->screenPreviewHelper) {
                     deckvideo->screenPreviewHelper->PaintGL();
+                } else {
+                    glRectf(-1,-1,1,1);
                 }
+                
                 glPopMatrix();
             }
             

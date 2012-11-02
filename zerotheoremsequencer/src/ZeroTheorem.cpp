@@ -10,9 +10,6 @@
 #define RES_CUBE  CINDER_RESOURCE( ../, cube.glsl, 129, GLSL )
 #define RES_CUBE2 CINDER_RESOURCE( ../, cube2.glsl, 129, GLSL )
 
-#define FRAMERATE_IDEAL 25.0f
-#define FRAMERATE_MEDIAN 1.0f
-
 float framerate = 0.0f;
 float frame_median_rate = FRAMERATE_MEDIAN;
 float frame_ideal_speed = FRAMERATE_MEDIAN/FRAMERATE_IDEAL;

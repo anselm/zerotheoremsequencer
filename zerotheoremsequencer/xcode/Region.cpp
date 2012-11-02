@@ -282,6 +282,8 @@ void Region::update(float ratio) {
         case REGION_MOVIE:
             if(playing) {
                 step(rate * ratio);
+            } else if(dirty) {
+                step(0); // if dirty then force to a frame
             }
             break;
 
@@ -504,6 +506,7 @@ void Region::draw() {
                 if(deckvideo && deckvideo->screenPreviewHelper) {
                     deckvideo->screenPreviewHelper->PaintGL();
                 } else {
+                    glColor4f(0.1,0.6,0.1,1);
                     glRectf(-1,-1,1,1);
                 }
                 

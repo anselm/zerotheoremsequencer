@@ -89,6 +89,7 @@ public:
     void draw();
 
     void reset() {
+        dirty = 1;
         visible = 1;
         playing = 1;
         loopcount = 0;
@@ -173,13 +174,13 @@ public:
                 while(cframe < range_low) cframe += (range_high-range_low);
             } else {
                 cframe = range_low;
-                done = 1;
+                //done = 1; disable this backwards case because we are often before the start
             }
         }
 
         if(movie) {
             if(1) {
-                if(((int)cframe) != ((int)lframe)) { movie.seekToFrame(cframe); dirty = 1; }
+                if(((int)cframe) != ((int)lframe) || dirty) { movie.seekToFrame(cframe); dirty = 1; }
             } else {
                 // another way is to do this is to step it - but this fails to deal with wrap around
                 while(((int)lframe) > ((int)cframe)) {

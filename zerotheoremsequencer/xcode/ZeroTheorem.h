@@ -42,6 +42,8 @@ using namespace std;
 #define WIDTH 1920
 #define HEIGHT 1080
 #define DEFAULTFOLDER "/zerotheoremshared"
+#define FRAMERATE_IDEAL 25.0f
+#define FRAMERATE_MEDIAN 1.0f
 
 class Group {
 public:

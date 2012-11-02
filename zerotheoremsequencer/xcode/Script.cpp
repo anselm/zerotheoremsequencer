@@ -81,6 +81,8 @@ void script_set_movie(const char* filename) {
     focus = r;
 }
 
+void script_goto(string label);
+
 bool script_run_command(string command) {
 
     // split it
@@ -223,7 +225,11 @@ bool script_run_command(string command) {
         else if(term == "ondone" && fields.size() > 1) {
             ondone = fields[1];
         }
-        
+
+        else if(term == "goto" && fields.size() > 1) {
+            script_goto(fields[1]);
+        }
+
         else if(term == "loops" && fields.size() > 1) {
             int loopcount = atoi(fields[1].c_str());
             if(focus) {
@@ -306,7 +312,7 @@ void script_goto(string label) {
 
 void Script::update() {
     // if we finished a movie then goto ondone event
-    if(focus && focus->done && ondone.size()>0) {
+    if(focus && focus->visible && focus->done && ondone.size()>0) {
         script_goto(ondone);
     }
 }

@@ -33,7 +33,12 @@
 }
 
 - (void) receivedNetworkPacket:(NSDictionary*)message viaConnection:(Connection*)connection {
-        // server only sends for now
+    // for now only get health
+    NSString* power = [message valueForKey:@"power"];
+    NSString* name = [message valueForKey:@"name"];
+    if(power && name) {
+        NSLog(@"Name and power are : %@ %@",name,power);
+    }
 }
 
 - (void)dealloc {

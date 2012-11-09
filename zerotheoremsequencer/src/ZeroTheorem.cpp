@@ -38,7 +38,7 @@ public:
     void setup() {
 
 //        setWindowPos(0,0);
-        cinder::app::setWindowPos(Vec2i(-WIDTH,0));
+     //   cinder::app::setWindowPos(Vec2i(-WIDTH,0));
         // currentGroup = new GroupCube();
         //currentGroup = new GroupBlackHole();
         // currentGroup = NewCubeGroup();

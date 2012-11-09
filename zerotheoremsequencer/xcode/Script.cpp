@@ -25,14 +25,14 @@ static vector<BoxArea> onevents;
 static string ondone;
 static int script_pc = 0;
 static Region* focus;
-static fs::path path = DEFAULTFOLDER "/script.txt";
+static fs::path path = DEFAULTFOLDER "/scripts/script.txt";
 static int loadcount = 0;
 
 void script_load () {
     
     script.clear();
     triggers.clear();
-
+loadcount++; // skip loader hack
     if(!loadcount) {
         loadcount++;
         // load a file the first time in only - successive resets just reset
@@ -56,6 +56,7 @@ void script_load () {
         myfile.close();
     } else {
         cout << "Unable to open file";
+        exit(0);
     }
     script_pc = 0;
 }

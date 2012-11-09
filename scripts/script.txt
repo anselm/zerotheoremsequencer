@@ -1,0 +1,64 @@
+# stand in for remote controls any day
+
+state50
+  network
+  key p network play 12
+  key k network stop 0
+  key h network hide 0
+  key s network show 0
+  key a fasterer 1.1
+  key s fasterer 0.9
+  reset /zerotheoremshared/STAGE-3_01_v07_mouse_24fps_h264.mov
+  stop /zerotheoremshared/STAGE-3_01_v07_mouse_24fps_h264.mov
+  move 0 0
+  rotate 0
+  looping 1
+  reset /zerotheoremshared/Mouth_Framed_Scene_23a.mov
+  reset /zerotheoremshared/Mouth_Framed_Scene_23b.mov
+  reset /zerotheoremshared/Mouth_Framed_Scene_23c.mov
+  hide /zerotheoremshared/Mouth_Framed_Scene_23a.mov
+  hide /zerotheoremshared/Mouth_Framed_Scene_23b.mov
+  hide /zerotheoremshared/Mouth_Framed_Scene_23c.mov
+  video blah
+  hide blah
+  move 1000 540 
+  size 300 300
+  onkey 32 state100
+  network play 0 
+  network stop 0 
+  return
+
+state100
+  // state 1: be playing backdrop only and make sure phone is reset
+  play /zerotheoremshared/STAGE-3_01_v07_mouse_24fps_h264.mov
+  play /zerotheoremshared/Mouth_Framed_Scene_23a.mov
+  network launch sc_23a_h264.mov
+  network play 10
+  onmouse 0 0 2000 2000 state100
+  onkey 32 state200
+  return 
+
+state200
+  hide /zerotheoremshared/Mouth_Framed_Scene_23a.mov
+  play /zerotheoremshared/Mouth_Framed_Scene_23b.mov
+  network launch sc_23b_h264.mov
+  network play 10
+  onkey 32 state300
+  return
+
+state300
+  hide /zerotheoremshared/Mouth_Framed_Scene_23b.mov
+  play /zerotheoremshared/Mouth_Framed_Scene_23c.mov
+  network launch sc_23c_h264.mov
+  network play 10
+  onkey 32 state100
+  ondone state400
+  return
+
+state400
+  hide /zerotheoremshared/Mouth_Framed_Scene_23c.mov
+  onkey 32 state100
+  return
+
+
+

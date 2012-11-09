@@ -4,12 +4,184 @@
 #include "Deck.h"
 #include "Cube.h"
 
+//#include <boost/iostreams/code_converter.hpp>
+//#include <boost/iostreams/mapped_file.hpp>
+
 #include "cinder/CinderResources.h"
 #define RES_VERTS CINDER_RESOURCE( ../, verts.glsl, 128, GLSL )
 #define RES_CUBE  CINDER_RESOURCE( ../, cube.glsl, 129, GLSL )
 #define RES_CUBE2 CINDER_RESOURCE( ../, cube2.glsl, 129, GLSL )
 
 vector<class Region*> regions;
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// caches - this one is a static cache for stuff that fits entirely into ram
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#define CUBECACHESIZE 1610
+
+//Surface32f    cache0[CUBECACHESIZE]; out of memory
+static Surface    cache1[CUBECACHESIZE];
+static Surface    cache2[CUBECACHESIZE];
+
+//inline Surface32f cache0Load(int texindex) { return cache0[texindex]; }
+inline Surface cache1Load(int texindex) { return cache1[texindex]; }
+inline Surface cache2Load(int texindex) { return cache2[texindex]; }
+
+void cacheLoadAll(const char* filename,int key,int low,int high) {
+    char blah[512];
+    try {
+        for(int i = low; i < high && i < CUBECACHESIZE; i++) {
+            sprintf(blah,filename,i);
+            switch(key) {
+                case 0: break; // cache0[i] = loadImage(blah); break;
+                case 1: cache1[i] = loadImage(blah); break;
+                case 2: cache2[i] = loadImage(blah); break;
+                default: break;
+            }
+            console() << "Loaded art " << blah << endl;
+        }
+    } catch(...) {
+        console() << "Failed to load art " << blah << endl;
+    }
+}
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// multithreaded cache
+// this just is not fast enough
+// so we probably have to throw this out and load everything into ram using nmap
+// http://stackoverflow.com/questions/5232026/loading-lots-of-image-data-109-pixels-into-memory
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#if 1
+
+#include <sys/stat.h>
+
+typedef void* MYVOID;
+static int fds[2000];
+static MYVOID mymapped[2000];
+static int sizes[2000];
+
+gl::Texture Region::threadRetrieve(int texindex) {
+
+    // this whole mmap fails.... is there another way to do memory mapping?
+    // should i try switch to 64 bit memory and then try fix the quicktime loading problem instead?
+    
+    
+    // i need to shm_open the memory handle...
+    // and i still need to figure how to map one to the other
+    
+    // open a handle on it and memory map it if new
+    // leave handles open?
+    if(!fds[texindex]) {
+        char blah[512];
+        sprintf(blah,filename.c_str(),texindex);
+        int fd;
+        struct stat s;
+        int status;
+        fd = open (blah, O_RDONLY);
+        //check (fd < 0, "open %s failed: %s", blah, strerror (errno));
+        if(fd >= 0) {
+            status = fstat (fd, &s);
+            //check (status < 0, "stat %s failed: %s", file_name, strerror (errno));
+            if(status >= 0) {
+                sizes[texindex] = s.st_size;
+                mymapped[texindex] = (MYVOID)mmap (0, sizes[texindex], PROT_READ, 0, fd, 0);
+                //check (mapped == MAP_FAILED, "mmap %s failed: %s",file_name, strerror (errno));
+                if(mymapped[texindex] == MAP_FAILED) {
+                    // um
+                } else {
+                    // now we have it...
+                }
+            }
+        }
+    }
+
+    // uh?
+    if(mymapped[texindex] == MAP_FAILED) {
+        return gl::Texture();
+    }
+
+    // turn into a buffer thingie for cinder
+    Buffer buffer = Buffer(mymapped[texindex],sizes[texindex]);
+
+    DataSourceBufferRef datasource = DataSourceBuffer::create(buffer);
+    
+    ImageSourceRef image = loadImage(datasource);
+
+    Surface32f surface = Surface32f(image);
+ 
+    return surface;
+}
+
+void Region::loaderThread() {}
+void Region::startThreadLoad() {}
+
+#else
+                                         
+static int lasttexrequest = 0;
+
+gl::Texture Region::threadRetrieve(int texindex) {
+    Surface32f surf;
+
+    lasttexrequest = texindex;
+    
+    mymutex.lock();
+    surf = mysurfaces[texindex];
+    mymutex.unlock();
+    
+    if(!surf) {
+        char blah[512];
+        try {
+            sprintf(blah,filename.c_str(),texindex);
+            console() << "Had to manually load art " << blah << endl;
+            surf = loadImage(blah);
+        } catch(...) {
+            console() << "Failed to load remap " << blah << endl;
+        }
+    }
+    
+    if(!surf) {
+        console() << "Failed to actually have remap " << texindex << endl;
+    }
+    
+    return surf;
+}
+
+void Region::loaderThread() {
+    char blah[512];
+
+    while(1) {
+        // try wipe behind
+        for(int i = 0; i < lasttexrequest;i++) {
+            if(!mysurfaces[i]) continue;
+            mysurfaces[i] = mysurfaces[1600]; // how do i free a surface?
+        }
+        // try load ahead
+         for(int i = lasttexrequest; i <= lasttexrequest+3; i++) { //        for(int i = low; i <= high; i++) {
+            if(mysurfaces[i]) continue;
+            sprintf(blah,filename.c_str(),i);
+             try {
+                 Surface32f scratch = loadImage(blah);
+                 console() << " thread loaded " << blah << endl;
+                 mymutex.lock();
+                 mysurfaces[i] = scratch;
+                 mymutex.unlock();
+             } catch(...) {
+             }
+        }
+    }
+}
+
+void Region::startThreadLoad() {
+    // should not be called more than once
+    // disabled for now because not fast enough - mythread = thread( bind( &Region::loaderThread, this) );
+}
+
+#endif
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Regions; these specify what we render
@@ -54,7 +226,7 @@ Region::Region(int _x,int _y,int _w,int _h,int _ntextures,int _kind, string _fil
         case REGION_REMAP:
         {
             /*
-             // do we have enough simultaneous texture units?
+             // do we have enough simultaneous texture units? no - we have to do it in pieces
              int MaxTextureUnits;
              glGetIntegerv(GL_MAX_TEXTURE_UNITS, &MaxTextureUnits);
              int MaxTextureImageUnits;
@@ -331,10 +503,9 @@ void Region::update(float ratio) {
                     if(texindex>texhigh) texindex = texlow;
                     if(texindex<CUBE_START) texindex = CUBE_START;
                     
-                    // uses a cache management system now to fetch these
-                    //              tex1 = cache1Load(texindex);
-                    //             tex0 = cache0Load(CUBE_REMAP_FILES,texindex);
-                    //tex2 = cache2Load(texindex);
+                    // uses a cache management system now to fetch these - this was a bit slow but may still be a good idea
+                    tex1 = cache1Load(texindex);
+                    tex0 = threadRetrieve(texindex);
                     
                 }
             }

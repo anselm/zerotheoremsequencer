@@ -196,7 +196,21 @@ public:
             }
         }
     }
+    
+    /// multi threaded loading services
+
+    std::thread mythread;
+    typedef map<int,Surface32f,less<int> > Surface32fMap;
+    Surface32fMap mysurfaces;
+    mutex mymutex;
+    void loaderThread();
+    virtual void startThreadLoad();
+    gl::Texture threadRetrieve(int texindex);
+
 };
 
 extern vector<class Region*> regions;
+
+// simple static caches
+void cacheLoadAll(const char* filename,int key,int low,int high);
 

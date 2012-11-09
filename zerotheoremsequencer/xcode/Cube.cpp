@@ -63,70 +63,6 @@
  };
  */
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// caches
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-#define CUBECACHESIZE 1610
-
-//Surface32f    cache0[CUBECACHESIZE]; out of memory
-static Surface    cache1[CUBECACHESIZE];
-static Surface    cache2[CUBECACHESIZE];
-
-//inline Surface32f cache0Load(int texindex) { return cache0[texindex]; }
-inline Surface cache1Load(int texindex) { return cache1[texindex]; }
-inline Surface cache2Load(int texindex) { return cache2[texindex]; }
-
-static void cacheLoadAll(const char* filename,int key,int low,int high) {
-    char blah[512];
-    try {
-        for(int i = low; i < high && i < CUBECACHESIZE; i++) {
-            sprintf(blah,filename,i);
-            switch(key) {
-                case 0: break; // cache0[i] = loadImage(blah); break;
-                case 1: cache1[i] = loadImage(blah); break;
-                case 2: cache2[i] = loadImage(blah); break;
-                default: break;
-            }
-            console() << "Loaded art " << blah << endl;
-        }
-    } catch(...) {
-        console() << "Failed to load art " << blah << endl;
-    }
-}
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// multithreaded cache - it works but we ran out of space and need to up to 64bit
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-typedef map<int,Surface32f,less<int> > Surface32fMap;
-static Surface32fMap mysurfaces;
-static mutex mymutex;
-
-static Surface32f cache0Load(const char* filename, int texindex) {
-    Surface32f surf;
-    
-    mymutex.lock();
-    surf = mysurfaces[texindex];
-    mymutex.unlock();
-    
-    if(!surf) {
-        char blah[512];
-        try {
-            sprintf(blah,filename,texindex);
-            console() << "Had to manually load art " << blah << endl;
-            surf = loadImage(blah);
-        } catch(...) {
-            console() << "Failed to load remap " << blah << endl;
-        }
-    }
-    
-    if(!surf) {
-        console() << "Failed to actually have remap " << texindex << endl;
-    }
-    
-    return surf;
-}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Another group of related assets
@@ -134,28 +70,6 @@ static Surface32f cache0Load(const char* filename, int texindex) {
 
 class CubeGroup: public Group {
     
-    
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // caching
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    
-    std::thread mythread;
-    
-    void loaderThread(const char* filename, int low, int high ) {
-        char blah[512];
-        for(int i = low; i <= high/2; i++) {
-            sprintf(blah,filename,i);
-            Surface32f scratch = loadImage(blah);
-            mymutex.lock();
-            mysurfaces[i] = scratch;
-            mymutex.unlock();
-            console() << " thread loaded " << blah << endl;
-        }
-    }
-    
-    void cacheBuffer(const char* filename,int low, int high) {
-        mythread = thread( bind( &CubeGroup::loaderThread, this, filename, low, high ) );
-    }
     
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // init and reset
@@ -172,32 +86,32 @@ class CubeGroup: public Group {
     
     void setup () {
         
-        // ************************************* load all of the cube frames into ram - we load some special white frames at the end
-        
-        //cacheLoadAll(CUBE_WHITE_FILES,1,CUBE_WHITE,CUBE_END);
-        //cacheLoadAll(CUBE_CUBES_FILES,1,CUBE_START,CUBE_WHITE);
-        
-        //cacheLoadAll(filename,3,0,ntextures);
-        
+        // ************************************* load pretty cube art for each frame; blending two groups into one
+
+        cacheLoadAll(CUBE_WHITE_FILES,1,CUBE_WHITE,CUBE_END);
+        cacheLoadAll(CUBE_CUBES_FILES,1,CUBE_START,CUBE_WHITE);
+ 
         // ************************************* build regions
-        /*
+
          regions.push_back(new Region(   0,   0,1920,1080,   0,REGION_IMAGE,"/zerotheoremshared/bottom.jpg"));
          
          // the cube data on disk is index1
-         //      regions.push_back(new Region(1050, 250, 512, 512,CUBE_END,REGION_REMAP,""));
-         //      cube = regions.back();
-         
+         regions.push_back(new Region(1050, 250, 512, 512,CUBE_END,REGION_REMAP,CUBE_REMAP_FILES));
+         cube = regions.back();
+        cube->texlow = CUBE_START;
+        cube->texhigh = CUBE_MANCOM;
+         cube->startThreadLoad();
+
          regions.push_back(new Region( 355,1080,   0,   0,   0,REGION_MOVIE,"/zerotheoremshared/mancom_bottom_TypeBall.mov"));
-         regions.back()->playloop();
-         regions.back()->playloop();
+         regions.back()->looping = 1;
          regions.push_back(new Region(500, 1090,   0,   0,   0,REGION_MOVIE,"/zerotheoremshared/Interface_E-LeftSideCodes.mov"));
-         regions.back()->playloop();
+         regions.back()->looping = 1;
          regions.push_back(new Region(1680, 860,   0,   0,   0,REGION_MOVIE,"/zerotheoremshared/Interface_E_BottomCode.mov"));
-         regions.back()->playloop();
+         regions.back()->looping = 1;
          
          // regions.push_back(new Region( 217, 740,   0,   0,   0,REGION_MOVIE,"/zerotheoremshared/from_boris/mouth_anoying/mouth_anoying_tst_A/quicktime_animation_uncompress_audio/mouthb.mov"));
          
-         */
+
         regions.push_back(new Region(  55,   0,   0,1080,   0,REGION_WORDS,
                                      "YOUR PEERS ARE WORKING HARDER THAN YOU "
                                      "DO YOU FEEL YOU ARE GIVING IT YOUR ALL "
@@ -233,7 +147,7 @@ class CubeGroup: public Group {
          
          */
         
-        regions.push_back(new Region(  400, 400, DECKWIDTH/DECKRATIO, DECKHEIGHT/DECKRATIO,   0,REGION_DECKV,""));
+        //regions.push_back(new Region(  400, 400, DECKWIDTH/DECKRATIO, DECKHEIGHT/DECKRATIO,   0,REGION_DECKV,""));
         
         
         regions.push_back(new Region(  100, 100, 200, 100,   0,REGION_FPS,""));
@@ -538,8 +452,6 @@ class CubeGroup: public Group {
         
         //console() << " picked stream: " << picked << " mouse: " << expectingdown << " cubetime: " << cube->texindex << " low: " << cube->texlow << " mode: " << mode << endl;
         
-        if(!stream) return;
-        
         switch(mode) {
                 
             case 0:
@@ -548,7 +460,7 @@ class CubeGroup: public Group {
                 cube->texhigh = 96;
                 mode = 5;
                 expectingdown = 1;
-                cacheBuffer(CUBE_REMAP_FILES,cube->texlow,cube->texhigh);
+                //magic now cube->startThreadLoad(CUBE_REMAP_FILES,cube->texlow,cube->texhigh);
                 break;
                 
             case 5:
@@ -559,7 +471,7 @@ class CubeGroup: public Group {
                 mode = 10;
                 expectingdown = 0;
                 cube->facelock[0]=cube->facelock[1]=cube->facelock[2]=cube->facelock[3]=cube->facelock[4]=cube->facelock[5]=0;
-                cacheBuffer(CUBE_REMAP_FILES,cube->texlow,cube->texhigh);
+                //cube->startThreadLoad(CUBE_REMAP_FILES,cube->texlow,cube->texhigh);
                 break;
             case 10:
                 if(cube->texindex<cube->texlow) break;
@@ -580,7 +492,7 @@ class CubeGroup: public Group {
                 cube->texlow = 296;
                 cube->texhigh = 319;
                 mode = 40;
-                cacheBuffer(CUBE_REMAP_FILES,cube->texlow,cube->texhigh);
+                //cube->startThreadLoad(CUBE_REMAP_FILES,cube->texlow,cube->texhigh);
                 break;
                 
             case 40:
@@ -595,7 +507,7 @@ class CubeGroup: public Group {
                 cube->texlow = 472;
                 cube->texhigh = 496;
                 mode = 60;
-                cacheBuffer(CUBE_REMAP_FILES,cube->texlow,cube->texhigh);
+                //cube->startThreadLoad(CUBE_REMAP_FILES,cube->texlow,cube->texhigh);
                 break;
                 
             case 60:
@@ -610,7 +522,7 @@ class CubeGroup: public Group {
                 cube->texlow = 663;
                 cube->texhigh = 686;
                 mode = 80;
-                cacheBuffer(CUBE_REMAP_FILES,cube->texlow,cube->texhigh);
+                //cube->startThreadLoad(CUBE_REMAP_FILES,cube->texlow,cube->texhigh);
                 break;
                 
             case 80:
@@ -625,7 +537,7 @@ class CubeGroup: public Group {
                 cube->texlow = 792;
                 cube->texhigh = 815;
                 mode = 100;
-                cacheBuffer(CUBE_REMAP_FILES,cube->texlow,cube->texhigh);
+                //cube->startThreadLoad(CUBE_REMAP_FILES,cube->texlow,cube->texhigh);
                 break;
                 
             case 100:
@@ -651,7 +563,7 @@ class CubeGroup: public Group {
                 cube->texlow = 1106;
                 cube->texhigh = 1129;
                 mode = 140;
-                cacheBuffer(CUBE_REMAP_FILES,cube->texlow,cube->texhigh);
+                //cube->startThreadLoad(CUBE_REMAP_FILES,cube->texlow,cube->texhigh);
                 break;
                 
             case 140:
@@ -666,7 +578,7 @@ class CubeGroup: public Group {
                 cube->texlow = 1281;
                 cube->texhigh = 1304;
                 mode = 160;
-                cacheBuffer(CUBE_REMAP_FILES,cube->texlow,cube->texhigh);
+                //cube->startThreadLoad(CUBE_REMAP_FILES,cube->texlow,cube->texhigh);
                 break;
                 
             case 160:
@@ -681,7 +593,7 @@ class CubeGroup: public Group {
                 cube->texlow = 1504;  // TODO this loop is wrong??? we really should have a fade to white cube here.
                 cube->texhigh = 1600;
                 mode = 180;
-                cacheBuffer(CUBE_REMAP_FILES,cube->texlow,cube->texhigh);
+                //cube->startThreadLoad(CUBE_REMAP_FILES,cube->texlow,cube->texhigh);
                 break;
                 
             case 180:
@@ -740,3 +652,7 @@ class CubeGroup: public Group {
     
 };
 
+
+Group* NewCubeGroup() {
+    return new CubeGroup();
+}

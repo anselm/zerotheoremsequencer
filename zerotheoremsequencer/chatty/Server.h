@@ -1,5 +1,4 @@
 
-#import <Foundation/Foundation.h>
 #import "Connection.h"
 
 @interface Server : NSObject<ConnectionDelegate> {

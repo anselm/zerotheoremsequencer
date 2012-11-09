@@ -3,6 +3,7 @@
 #include "Region.h"
 #include "Deck.h"
 #include "Script.h"
+#include "Cube.h"
 
 #include "cinder/CinderResources.h"
 
@@ -39,6 +40,7 @@ public:
     
         // currentGroup = new GroupCube();
         //currentGroup = new GroupBlackHole();
+        // currentGroup = NewCubeGroup();
         currentGroup = new Script();
         currentGroup->setup();
     }
@@ -121,14 +123,27 @@ public:
             console() << "drew before updated!" << endl;
             return;
         }
-        gl::clear();
+
+/* glClear is failing for some reason
+        glColor4f(1,0,0,1);
+        glRectf(0,0,WIDTH,HEIGHT);
+
+        gl::clear( Color( 0, 0, 1 ), true );
+        glDepthMask( GL_FALSE );
+        glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+        glClear( GL_COLOR_BUFFER_BIT );
+*/
         gl::pushMatrices();
         glTranslatef(x,y,z);
         for( size_t m = 0; m < regions.size(); ++m ) {
+            glColor4f(1,1,1,1);
             regions[m]->draw();
         }
         framerate = this->getAverageFps();
         gl::popMatrices();
+
+    
+    
     }
 
     void mouseMove(MouseEvent event) {

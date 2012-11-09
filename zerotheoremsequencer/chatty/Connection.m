@@ -84,16 +84,15 @@ void writeStreamEventHandler(CFWriteStreamRef stream, CFStreamEventType eventTyp
     self.host = nil;
     connectedSocketHandle = -1;
     packetBodySize = -1;
-    delegate = 0;
+    //delegate = 0; don't detach this ever - there is no point
 }
 
 
 // cleanup
 - (void)dealloc {
-    delegate = 0;
+    //delegate = 0; don't detach this ever - there is no point
     self.netService = nil;
     self.host = nil;
-    self.delegate = nil;
     
     [super dealloc];
 }
@@ -182,10 +181,8 @@ void writeStreamEventHandler(CFWriteStreamRef stream, CFStreamEventType eventTyp
     outgoingDataBuffer = [[NSMutableData alloc] init];
     
     // Indicate that we want socket to be closed whenever streams are closed
-    CFReadStreamSetProperty(readStream, kCFStreamPropertyShouldCloseNativeSocket,
-                            kCFBooleanTrue);
-    CFWriteStreamSetProperty(writeStream, kCFStreamPropertyShouldCloseNativeSocket,
-                             kCFBooleanTrue);
+    CFReadStreamSetProperty(readStream, kCFStreamPropertyShouldCloseNativeSocket,kCFBooleanTrue);
+    CFWriteStreamSetProperty(writeStream, kCFStreamPropertyShouldCloseNativeSocket,kCFBooleanTrue);
     
     // We will be handling the following stream events
     CFOptionFlags registeredEvents = kCFStreamEventOpenCompleted |
@@ -217,6 +214,7 @@ void writeStreamEventHandler(CFWriteStreamRef stream, CFStreamEventType eventTyp
 
 // Close connection
 - (void)close {
+
     // Cleanup read stream
     if ( readStream != nil ) {
         CFReadStreamUnscheduleFromRunLoop(readStream, CFRunLoopGetCurrent(), kCFRunLoopCommonModes);
@@ -246,8 +244,18 @@ void writeStreamEventHandler(CFWriteStreamRef stream, CFStreamEventType eventTyp
         self.netService = nil;
     }
     
-    // Reset all other variables
+    // Reset all other variables - XXX this crashes if the below is not done last due to memory pointer ref count release
     [self clean];
+
+    // tell delegate last - there is a subtle crash issue here - if not done last then memory pointer ref count is released too early
+    if(delegate) {
+        if ( !readStreamOpen || !writeStreamOpen ) {
+            [delegate connectionAttemptFailed:self];
+        }
+        else {
+            [delegate connectionTerminated:self];
+        }
+    }
 }
 
 
@@ -293,14 +301,6 @@ void readStreamEventHandler(CFReadStreamRef stream, CFStreamEventType eventType,
     else if ( event == kCFStreamEventEndEncountered || event == kCFStreamEventErrorOccurred ) {
         // Clean everything up
         [self close];
-        
-        // If we haven't connected yet then our connection attempt has failed
-        if ( !readStreamOpen || !writeStreamOpen ) {
-            [delegate connectionAttemptFailed:self];
-        }
-        else {
-            [delegate connectionTerminated:self];
-        }
     }
 }
 
@@ -316,7 +316,6 @@ void readStreamEventHandler(CFReadStreamRef stream, CFStreamEventType eventType,
         if ( len <= 0 ) {
             // Either stream was closed or error occurred. Close everything up and treat this as "connection terminated"
             [self close];
-            [delegate connectionTerminated:self];
             return;
         }
         
@@ -355,7 +354,9 @@ void readStreamEventHandler(CFReadStreamRef stream, CFStreamEventType eventType,
             NSDictionary* packet = [NSKeyedUnarchiver unarchiveObjectWithData:raw];
             
             // Tell our delegate about it
-            [delegate receivedNetworkPacket:packet viaConnection:self];
+            if(delegate) {
+                [delegate receivedNetworkPacket:packet viaConnection:self];
+            }
             
             // Remove that chunk from buffer
             NSRange rangeToDelete = {0, packetBodySize};
@@ -396,14 +397,6 @@ void writeStreamEventHandler(CFWriteStreamRef stream, CFStreamEventType eventTyp
     else if ( event == kCFStreamEventEndEncountered || event == kCFStreamEventErrorOccurred ) {
         // Clean everything up
         [self close];
-        
-        // If we haven't connected yet then our connection attempt has failed
-        if ( !readStreamOpen || !writeStreamOpen ) {
-            [delegate connectionAttemptFailed:self];
-        }
-        else {
-            [delegate connectionTerminated:self];
-        }
     }
 }
 
@@ -432,7 +425,6 @@ void writeStreamEventHandler(CFWriteStreamRef stream, CFStreamEventType eventTyp
     if ( writtenBytes == -1 ) {
         // Error occurred. Close everything up.
         [self close];
-        [delegate connectionTerminated:self];
         return;
     }
     
@@ -441,17 +433,13 @@ void writeStreamEventHandler(CFWriteStreamRef stream, CFStreamEventType eventTyp
 }
 
 
-#pragma mark -
-#pragma mark NSNetService Delegate Method Implementations
-
 // Called if we weren't able to resolve net service
 - (void)netService:(NSNetService *)sender didNotResolve:(NSDictionary *)errorDict {
     if ( sender != netService ) {
         return;
     }
     
-    // Close everything and tell delegate that we have failed
-    [delegate connectionAttemptFailed:self];
+    // Close everything - will tell delegate itself
     [self close];
 }
 
@@ -471,7 +459,6 @@ void writeStreamEventHandler(CFWriteStreamRef stream, CFStreamEventType eventTyp
     
     // Connect!
     if ( ![self connect] ) {
-        [delegate connectionAttemptFailed:self];
         [self close];
     }
 }

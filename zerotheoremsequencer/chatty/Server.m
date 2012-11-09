@@ -21,13 +21,15 @@
 @synthesize clients,port, netService;
 
 - (void) connectionAttemptFailed:(Connection*)connection {
-        // so what?
+    // we do NOT want to close it again - it will close shortly by itself - [connection close];
+    [clients removeObject:connection];
+    NSLog(@"lost conn - server removed connection - now has this count %d",[clients count]);
 }
 
 - (void) connectionTerminated:(Connection*)connection {
-    [connection close];
+    // we do NOT want to close it again - it will close shortly by itself - [connection close];
     [clients removeObject:connection];
-    NSLog(@"server removed connection now has this count %d",[clients count]);
+    NSLog(@"term conn - server removed connection - now has this count %d",[clients count]);
 }
 
 - (void) receivedNetworkPacket:(NSDictionary*)message viaConnection:(Connection*)connection {

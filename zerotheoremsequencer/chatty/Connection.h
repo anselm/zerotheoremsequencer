@@ -13,6 +13,10 @@
 
 @interface Connection : NSObject <NSNetServiceDelegate> {
    @public id<ConnectionDelegate> delegate;
+
+    // some state i am storing here for convenience
+    NSString* name;
+    NSString* power;
     
     // Connection info: host address and port
     NSString* host;
@@ -37,6 +41,8 @@
 }
 
 @property(nonatomic,retain) id<ConnectionDelegate> delegate;
+@property(nonatomic,retain) NSString* name;
+@property(nonatomic,retain) NSString* power;
 
 // Initialize and store connection information until 'connect' is called
 - (id)initWithHostAddress:(NSString*)host andPort:(int)port;

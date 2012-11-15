@@ -5,11 +5,12 @@
     uint16_t port;
     CFSocketRef listeningSocket;
     NSNetService* netService;
-    NSMutableSet* clients;
+    @public NSMutableSet* clients;
 }
 
 - (BOOL)start;
 - (void)stop;
 - (void)broadcastMessage:(NSDictionary*)packet;
+- (void)narrowcastMessage:(NSDictionary*)packet toName:(NSString*)name;
 
 @end

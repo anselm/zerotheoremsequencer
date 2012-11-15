@@ -33,6 +33,7 @@ public:
     float cframe = 0;
     float rate = 1;
     int dirty = 0;
+    int range_low_hard = 1;
     int range_low = 0;
     int range_high = 1;
     float z = 0;                    // sort order
@@ -95,6 +96,7 @@ public:
         loopcount = 0;
         looping = 0;
         cframe = 0;
+        range_low_hard = 1;
         range_low = 0;
         range_high = nframes;
         done = 0;
@@ -139,8 +141,6 @@ public:
             w += (targetw-w)/2.0f * amount * targetspeed;
             h += (targeth-h)/2.0f * amount * targetspeed;
         } else {
-            float temp = signof(targetx-x);
-            console() << "blah" << temp << endl;
             x += signof(targetx-x) * amount * targetspeed;
             y += signof(targety-y) * amount * targetspeed;
             w += signof(targetw-w) * amount * targetspeed;
@@ -162,7 +162,7 @@ public:
         if(cframe >= range_high) {
             if(looping) {
                 if(loopcount) { loopcount--; if(loopcount <= 0) looping = 0; }
-                while(cframe > range_high) cframe -= (range_high-range_low);
+                while(cframe >= range_high) cframe -= (range_high-range_low);
             } else {
                 cframe = range_high - 1;
                 done = 1;
@@ -170,8 +170,11 @@ public:
         }
         else if(cframe < range_low) {
             if(looping) {
-                if(loopcount) { loopcount--; if(loopcount <= 0) looping = 0; }
-                while(cframe < range_low) cframe += (range_high-range_low);
+                if(range_low_hard) {
+                    // i actually want it to be legal to be below the bottom and simply climb into range
+                    if(loopcount) { loopcount--; if(loopcount <= 0) looping = 0; }
+                    while(cframe < range_low) cframe += (range_high-range_low);
+                }
             } else {
                 cframe = range_low;
                 //done = 1; disable this backwards case because we are often before the start

@@ -33,11 +33,17 @@
 }
 
 - (void) receivedNetworkPacket:(NSDictionary*)message viaConnection:(Connection*)connection {
+
+    
+    // store received state
+    // store the name and the health and connection into a table
     // for now only get health
     NSString* power = [message valueForKey:@"power"];
     NSString* name = [message valueForKey:@"name"];
     if(power && name) {
         NSLog(@"Name and power are : %@ %@",name,power);
+        [connection setName: name];
+        [connection setPower: power];
     }
 }
 
@@ -170,6 +176,15 @@ static void serverAcceptCallback(CFSocketRef socket, CFSocketCallBackType type, 
 - (void)broadcastMessage:(NSDictionary*)packet {
     if(!clients || [clients count] < 1) return;
     [clients makeObjectsPerformSelector:@selector(sendNetworkPacket:) withObject:packet];
+}
+
+- (void)narrowcastMessage:(NSDictionary*)packet toName:(NSString*)name{
+    if(!clients || [clients count] < 1) return;
+    for(Connection* client in clients) {
+        if(client->name && [client->name isEqualToString:name]) {
+            [client sendNetworkPacket:packet];
+        }
+    }
 }
 
 #pragma mark Bonjour

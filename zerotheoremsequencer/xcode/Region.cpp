@@ -275,6 +275,7 @@ Region::Region(int _x,int _y,int _w,int _h,int _ntextures,int _kind, string _fil
                 for( vector<Capture::DeviceRef>::const_iterator deviceIt = devices.begin(); deviceIt != devices.end(); ++deviceIt ) {
                     Capture::DeviceRef device = *deviceIt;
                     console() << "Found Device " << device->getName() << " ID: " << device->getUniqueId() << std::endl;
+                    if(!strncmp((const char*)device->getName().c_str(),(const char*)"FaceTime",8)) continue;
                     try {
                         if( device->checkAvailable() ) {
                             mCapture = Capture( w, h, device ) ;
@@ -627,7 +628,7 @@ void Region::draw() {
             if( mCapture && mTexture && mValid) {
                 gl::draw( mTexture,Rectf(x,y,x+w,y+h));
             } else {
-                console() << " no video " << endl;
+               // console() << " no video " << endl;
             }
             break;
             

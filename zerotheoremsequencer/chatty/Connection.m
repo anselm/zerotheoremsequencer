@@ -67,6 +67,7 @@ void writeStreamEventHandler(CFWriteStreamRef stream, CFStreamEventType eventTyp
 @synthesize host, port;
 @synthesize connectedSocketHandle;
 @synthesize netService;
+@synthesize name,power;
 
 
 // Initialize, empty

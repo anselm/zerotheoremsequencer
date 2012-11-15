@@ -27,12 +27,14 @@ static int script_pc = 0;
 static Region* focus;
 static fs::path path = DEFAULTFOLDER "/scripts/script.txt";
 static int loadcount = 0;
+static int delaytimer = 0;
+static string delayondone;
 
 void script_load () {
     
     script.clear();
     triggers.clear();
-loadcount++; // skip loader hack
+loadcount++;
     if(!loadcount) {
         loadcount++;
         // load a file the first time in only - successive resets just reset
@@ -99,6 +101,23 @@ bool script_run_command(string command) {
         
         string term = fields[0];
 
+        if(term == "video2" && fields.size() > 1) {
+            Region* r = 0;
+            string filename = fields[1];
+            for(int i = 0; i < regions.size() ; i++) {
+                if(regions[i]->filename == filename) {
+                    r = regions[i];
+                    break;
+                }
+            }
+            if(!r) {
+                r = new Region(  400, 400, 400,400,   0,REGION_VIDEO,"");
+                regions.push_back(r);
+                r->filename = filename;
+            }
+            focus = r;
+        }
+
         if(term == "video" && fields.size() > 1) {
             Region* r = 0;
             string filename = fields[1];
@@ -147,7 +166,7 @@ bool script_run_command(string command) {
         else if((term == "fasterer") && fields.size() > 1) {
             float rate = atof(fields[1].c_str());
             for(int i = 0; i < regions.size(); i++) {
-                regions[i]->rate *= rate;
+                regions[i]->rate += rate;
             }
         }
         else if(term == "play" && fields.size() > 1) {
@@ -192,6 +211,10 @@ bool script_run_command(string command) {
             if(focus) focus->visible = 1;
             if(focus) focus->dirty = 1; // mark as dirty so that we force up a frame
             if(focus && focus->movie) focus->movie.seekToFrame( focus->cframe ); // force seek to that frame too
+        }
+
+        else if(term == "rangehard" && fields.size() > 1 && focus) {
+            focus->range_low_hard = atoi(fields[1].c_str());
         }
 
         else if(term == "range" && fields.size() > 2 && focus) {
@@ -245,6 +268,11 @@ bool script_run_command(string command) {
             }
         }
 
+        else if(term == "delay" && fields.size() > 2) {
+            delayondone = fields[1];
+            delaytimer = atoi(fields[2].c_str());
+        }
+
         else if(term == "target" && fields.size() > 6 && focus) {
             focus->targetx = atoi(fields[1].c_str());
             focus->targety = atoi(fields[2].c_str());
@@ -259,7 +287,24 @@ bool script_run_command(string command) {
             if(fields.size() > 1) {
                 const char* msg = fields[1].c_str();
                 const char* val = fields.size() < 3 ? "" : fields[2].c_str();
-                serverMessage(msg,val);
+                serverBroadcastMessage(msg,val);
+            }
+        }
+
+        else if(term == "netnext") {
+            serverNextClient();
+        }
+
+        else if(term == "netprev") {
+            serverPrevClient();
+        }
+
+        else if(term == "netnarrow") {
+            serverStart();
+            if(fields.size() > 1) {
+                const char* msg = fields[1].c_str();
+                const char* val = fields.size() < 3 ? "" : fields[2].c_str();
+                serverNarrowcastNext(msg,val);
             }
         }
 
@@ -312,6 +357,14 @@ void script_goto(string label) {
 ////////////////////////////////////////////////////////////////////////////////
 
 void Script::update() {
+    
+    if(delaytimer > 0 && delayondone.size() > 0) {
+        delaytimer--;
+        if(!delaytimer) {
+            script_goto(delayondone);
+        }
+    }
+    
     // if we finished a movie then goto ondone event
     if(focus && focus->visible && focus->done && ondone.size()>0) {
         script_goto(ondone);
@@ -339,27 +392,14 @@ void Script::mouseDown(MouseEvent event) {
 
 void Script::keyDown( KeyEvent event ) {
 
+    // run all commands attached to this key
     for(int i = 0; i < triggers.size();i++) {
         if(triggers[i].key == event.getChar()) {
             script_run_command(triggers[i].command);
         }
     }
-/*
-    if(event.getChar() == 'p') {
-        // [server broadcastMessage:@"hello"];
-        console() << "Telling network listeners to toggle play/pause" << endl;
-        serverMessage("goto","9");
-        serverMessage("play","stuffnowdude");
-    }
 
-    if(event.getChar() == 'k') {
-        // [server broadcastMessage:@"hello"];
-        console() << "Telling network listeners to goto start and stop" << endl;
-        serverMessage("goto","0");
-        serverMessage("stop","you");
-    }
-  */
-    // reset by resetting stopping and hiding all regions and then reload script from disk
+    // reset by resetting stopping and hiding all regions and then reload script from disk xxx this should be a scriptable command
     if(event.getChar() == 'r') {
         for(int i = 0; i < regions.size();i++) {
             Region* r = regions[i];
@@ -375,7 +415,7 @@ void Script::keyDown( KeyEvent event ) {
         return;
     }
 
-    
+    // goto to the matching keyed area
     for(int i = 0; i < onevents.size();i++) {
         BoxArea box = onevents[i];
         if(box.c == event.getChar()) {
@@ -385,6 +425,22 @@ void Script::keyDown( KeyEvent event ) {
     }
 
 }
+
+// code:
+// - skip over loops perfectly tightly if detecting a mouse down
+// - need to make hand held
+// - need to do video mask <<<
+// - need to add text <<<
+
+// script:
+// - should i bother having a rangehard = 0 event to allow easing out of loops better?
+// - a keyboard way to jump to any branch
+// - do we want a pause before exporting to vial?
+// - test every block
+// - test entire sequence
+
+// test:
+// - test typical interaction on set
 
 
 

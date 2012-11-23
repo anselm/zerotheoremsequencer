@@ -29,12 +29,13 @@ static fs::path path = DEFAULTFOLDER "/scripts/script.txt";
 static int loadcount = 0;
 static int delaytimer = 0;
 static string delayondone;
+static int mousedown = 0;
 
 void script_load () {
     
     script.clear();
     triggers.clear();
-loadcount++;
+
     if(!loadcount) {
         loadcount++;
         // load a file the first time in only - successive resets just reset
@@ -65,6 +66,17 @@ loadcount++;
 
 void script_step() {
     if(script_pc < script.size()) script_pc++;
+}
+
+Region* script_get_movie(const char* filename) {
+    Region* r = 0;
+    for(int i = 0; i < regions.size() ; i++) {
+        if(regions[i]->filename == filename) {
+            r = regions[i];
+            break;
+        }
+    }
+    return r;
 }
 
 void script_set_movie(const char* filename) {
@@ -116,6 +128,39 @@ bool script_run_command(string command) {
                 r->filename = filename;
             }
             focus = r;
+        }
+
+        if(term == "words" && fields.size() > 1) {
+            Region* r = 0;
+            string filename = fields[1];
+            for(int i = 0; i < regions.size() ; i++) {
+                if(regions[i]->kind == REGION_WORDS) {
+                    r = regions[i];
+                    break;
+                }
+            }
+            if(!r) {
+                
+                regions.push_back(new Region(  55,   0,   0,1080,   0,REGION_WORDS,
+                                             "PEDAL TO THE MEDAL – THE GOLD MEDAL OF ENTITY CRUNCHING!"
+                                             "FASTER, FARTHER, FURTHER, FORWARD!"
+                                             "HURRY!  UNEMPLOYMENT IS GAINING ON YOU!"
+                                           //  "GREAT JOB!  IT’S ALL DOWNHILL FROM HERE!"
+                                        //     "YOU’VE GOT THE SLOOOOOOWS…"
+                                        //     "DON’T SHIRK IT – WORK IT!"
+                                        //     "IDLE FEET ARE THE DEVIL’S PLAYGROUND…"
+                                       //      "FULL SPEED AHEAD!  STAY THE COURSE!"
+                                          //   "YOU’RE ALL CHARGED UP!  RELAX AND COAST A BIT…"
+                                       //      "HIGH RPM = HIGH PAY!"
+                                       //      "LOW RPM = UNEMPLOYMENT LINE!"
+                                       //      "MUSH!"
+                                       //      "YOU’RE STROLLING – GET SCROLLING!"
+                                       //      "COFFEE BREAK’S OVER – BACK ON YOUR TREADS!"
+                                             ));
+                regions.back()->speed = 15;
+            }
+            focus = r;
+
         }
 
         if(term == "video" && fields.size() > 1) {
@@ -200,10 +245,10 @@ bool script_run_command(string command) {
             script_set_movie(fields[1].c_str());
             if(focus) focus->stop();
         }
-
+        
         else if(term == "hide" && fields.size() > 1) {
-            script_set_movie(fields[1].c_str());
-            if(focus) focus->hide();
+            Region * r = script_get_movie(fields[1].c_str());
+            if(r) r->hide();
         }
 
         else if(term == "show" && fields.size() > 1) {
@@ -213,6 +258,12 @@ bool script_run_command(string command) {
             if(focus && focus->movie) focus->movie.seekToFrame( focus->cframe ); // force seek to that frame too
         }
 
+        else if(term == "unhide" && fields.size() > 1) {
+            Region* r = script_get_movie(fields[1].c_str());
+            if(r) r->visible = 1;
+            if(r) r->dirty = 1; // mark as dirty so that we force up a frame
+        }
+        
         else if(term == "rangehard" && fields.size() > 1 && focus) {
             focus->range_low_hard = atoi(fields[1].c_str());
         }
@@ -321,8 +372,11 @@ bool script_run_command(string command) {
         // animated effects on regions
         
         else if(term == "return") {
-            return 0;
+            if(focus && focus->looping && mousedown);
+            else return 0;
         }
+
+
     }
 
     return 1;
@@ -378,7 +432,12 @@ void Script::setup() {
 
 }
 
+void Script::mouseUp(MouseEvent event) {
+    mousedown = 0;
+}
+
 void Script::mouseDown(MouseEvent event) {
+    mousedown = 1;
     int x = event.getX();
     int y = event.getY();
     for(int i = 0; i < onevents.size();i++) {
@@ -395,6 +454,7 @@ void Script::keyDown( KeyEvent event ) {
     // run all commands attached to this key
     for(int i = 0; i < triggers.size();i++) {
         if(triggers[i].key == event.getChar()) {
+            console() << "running command " << triggers[i].command << endl;
             script_run_command(triggers[i].command);
         }
     }
@@ -426,21 +486,20 @@ void Script::keyDown( KeyEvent event ) {
 
 }
 
+//
 // code:
-// - skip over loops perfectly tightly if detecting a mouse down
-// - need to make hand held
-// - need to do video mask <<<
-// - need to add text <<<
-
+// >>>>>- skip over loops perfectly tightly if detecting a mouse down
+//         --- need another way to fix this a bit tighter.... adjust frames a bit
+//
+// - need new words - only show certain words periodically - not every word ( put source on each box? )
+//
 // script:
-// - should i bother having a rangehard = 0 event to allow easing out of loops better?
-// - a keyboard way to jump to any branch
-// - do we want a pause before exporting to vial?
-// - test every block
-// - test entire sequence
-
-// test:
-// - test typical interaction on set
-
+// - test d7; we need to be able to keyboard drive this off and on
+//
+// - test phone
+//           - phone does not respect initialization rotation
+//           - it might be nice to stop the phone after it buzzes... can i have a pause point somehow? how?
+//           - the user can actually move the phone around on the screen - could disable that too
+//
 
 

@@ -14,3 +14,6 @@
 - (void)narrowcastMessage:(NSDictionary*)packet toName:(NSString*)name;
 
 @end
+
+#define MYNETWORKNAME @"_myzerotheorem._tcp."
+#define MYCHATROOMNAME @"myzerotheorem"

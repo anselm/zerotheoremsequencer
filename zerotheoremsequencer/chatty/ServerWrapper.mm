@@ -34,7 +34,7 @@ extern "C" {
     }
 
     void serverNextClient() {
-        if(!server->clients || !server->clients.count) return;
+        if(!server || !server->clients || !server->clients.count) return;
         targetclient++;
         if(targetclient >= server->clients.count) {
             targetclient = 0;
@@ -52,7 +52,7 @@ extern "C" {
     }
 
     void serverPrevClient() {
-        if(!server->clients || !server->clients.count) return;
+        if(!server || !server->clients || !server->clients.count) return;
         targetclient--;
         if(targetclient<0) {
             targetclient = 0;

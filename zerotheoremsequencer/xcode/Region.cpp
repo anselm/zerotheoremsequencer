@@ -266,7 +266,7 @@ Region::Region(int _x,int _y,int _w,int _h,int _ntextures,int _kind, string _fil
             }
             break;
         case REGION_VIDEO:
-            if(1) {
+            if(visible) {
                 vector<Capture::DeviceRef> devices( Capture::getDevices() );
                 for( vector<Capture::DeviceRef>::const_iterator deviceIt = devices.begin(); deviceIt != devices.end(); ++deviceIt ) {
                     Capture::DeviceRef device = *deviceIt;
@@ -275,7 +275,7 @@ Region::Region(int _x,int _y,int _w,int _h,int _ntextures,int _kind, string _fil
                 for( vector<Capture::DeviceRef>::const_iterator deviceIt = devices.begin(); deviceIt != devices.end(); ++deviceIt ) {
                     Capture::DeviceRef device = *deviceIt;
                     console() << "Found Device " << device->getName() << " ID: " << device->getUniqueId() << std::endl;
-                    if(!strncmp((const char*)device->getName().c_str(),(const char*)"FaceTime",8)) continue;
+                    //if(!strncmp((const char*)device->getName().c_str(),(const char*)"FaceTime",8)) continue;
                     try {
                         if( device->checkAvailable() ) {
                             mCapture = Capture( w, h, device ) ;
@@ -443,7 +443,7 @@ void Region::update(float ratio) {
             break;
             
         case REGION_VIDEO:
-            if( mCapture && mCapture.checkNewFrame() ) {
+            if(visible && mCapture && mCapture.checkNewFrame() ) {
                 mSurface = mCapture.getSurface();
                 mTexture = gl::Texture( mSurface );
                 mValid = 1;
@@ -625,8 +625,98 @@ void Region::draw() {
             break;
             
         case REGION_VIDEO:
-            if( mCapture && mTexture && mValid) {
-                gl::draw( mTexture,Rectf(x,y,x+w,y+h));
+            if(visible && mCapture && mTexture && mValid) {
+                static int tried = 0;
+                static gl::Texture mymask;
+                if(!tried) {
+                    tried = 1;
+                    mymask = loadImage( "/zerotheoremshared/mancom_eye_mask_webcam_B.png" );
+                }
+                if(!mymask) break;
+                gl::pushMatrices();
+                gl::translate(x,y);
+                gl::rotate(rotate);
+
+//                glColor4f(1,1,1,1);
+                
+//                gl::draw( mTexture,Rectf(0,0,w,h));
+
+                mTexture.enableAndBind();
+                
+                glBegin (GL_QUADS);
+                glTexCoord2f (0.0, 0.2);
+                glVertex3f (0.0, 0.0, 0.0);
+                glTexCoord2f (1.0, 0.2);
+                glVertex3f (w, 0.0, 0.0);
+                glTexCoord2f (1.0, 0.8);
+                glVertex3f (w,h, 0.0);
+                glTexCoord2f (0.0, 0.8);
+                glVertex3f (0.0, h, 0.0);
+                glEnd ();
+                
+                mTexture.unbind();
+
+                
+                gl::draw( mymask,Rectf(0,0,w,h));
+
+/*
+                ///////////////////////////////////////////////////////////// mask
+
+                gl::enableAlphaBlending();
+                glActiveTextureARB( GL_TEXTURE0_ARB );
+                mTexture.enableAndBind();
+
+#define GL_COMBINE_EXT                    0x8570
+#define GL_COMBINE_RGB_EXT                0x8571
+#define GL_COMBINE_ALPHA_EXT              0x8572
+
+                glTexEnvf (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE_EXT);
+                glTexEnvf (GL_TEXTURE_ENV, GL_COMBINE_RGB_EXT, GL_REPLACE);
+                
+                glActiveTextureARB( GL_TEXTURE1_ARB );
+                mymask.enableAndBind();
+                glTexEnvf (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE_EXT);
+                glTexEnvf (GL_TEXTURE_ENV, GL_COMBINE_RGB_EXT, GL_INCR);
+                
+                glBegin(GL_QUADS);
+                glMultiTexCoord2fARB(GL_TEXTURE0_ARB, 0.0, 0.0);
+                glMultiTexCoord2fARB(GL_TEXTURE1_ARB, 0.0, 0.0);
+                glVertex2f(0, 0);
+                
+                glMultiTexCoord2fARB(GL_TEXTURE0_ARB, 1.0, 0.0);
+                glMultiTexCoord2fARB(GL_TEXTURE1_ARB, 1.0, 0.0);
+                glVertex2f(w, 0);
+                
+                glMultiTexCoord2fARB(GL_TEXTURE0_ARB, 1.0, 1.0);
+                glMultiTexCoord2fARB(GL_TEXTURE1_ARB, 1.0, 1.0);
+                glVertex2f(w,h);
+                
+                glMultiTexCoord2fARB(GL_TEXTURE0_ARB, 0.0, 1.0);
+                glMultiTexCoord2fARB(GL_TEXTURE1_ARB, 0.0, 1.0);
+                glVertex2f(0, h);
+
+                glEnd();
+                
+                mTexture.unbind();
+                glActiveTextureARB( GL_TEXTURE1_ARB );
+                mymask.unbind();
+
+                gl::disableAlphaBlending();
+
+                ///////////////////////////////////////////////////////////// end mask
+*/
+
+  /*
+                glEnable(GL_BLEND);
+glBlendFunc(GL_DST_COLOR,GL_ZERO);
+                glBlendFunc(GL_ONE, GL_ZERO);
+                glBlendFuncSeparate(GL_ZERO, GL_ONE, GL_SRC_COLOR, GL_ZERO);
+                gl::draw( mymask,Rectf(0,0,w,h));
+                glBlendFunc(GL_DST_ALPHA, GL_ONE_MINUS_DST_ALPHA);
+                gl::draw( mTexture,Rectf(0,0,w,h));
+                glDisable(GL_BLEND);
+*/
+                gl::popMatrices();
             } else {
                // console() << " no video " << endl;
             }

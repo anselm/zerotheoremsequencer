@@ -190,8 +190,8 @@ static void serverAcceptCallback(CFSocketRef socket, CFSocketCallBackType type, 
 #pragma mark Bonjour
 
 - (BOOL) publishService {
-    NSString* chatRoomName = @"zerotheorem";
- 	self.netService = [[NSNetService alloc]  initWithDomain:@"" type:@"_zerotheorem._tcp." name:chatRoomName port:self.port];
+    NSString* chatRoomName = MYCHATROOMNAME;
+ 	self.netService = [[NSNetService alloc]  initWithDomain:@"" type:MYNETWORKNAME name:chatRoomName port:self.port];
 	if (self.netService == nil) return NO;
 	[self.netService scheduleInRunLoop:[NSRunLoop currentRunLoop] forMode:NSRunLoopCommonModes];
 	[self.netService publish];

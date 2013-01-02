@@ -7,6 +7,11 @@
 
 #include "cinder/CinderResources.h"
 
+#include "cinder/qtime/MovieWriter.h"
+#include "cinder/Utilities.h"
+using namespace ci;
+
+
 #define RES_VERTS CINDER_RESOURCE( ../, verts.glsl, 128, GLSL )
 #define RES_CUBE  CINDER_RESOURCE( ../, cube.glsl, 129, GLSL )
 #define RES_CUBE2 CINDER_RESOURCE( ../, cube2.glsl, 129, GLSL )
@@ -21,6 +26,7 @@ public:
     Group* currentGroup;
     Settings* settings;
     Timer timer;
+    qtime::MovieWriter movie;
 
 	void prepareSettings( Settings *settings ) {
         this->settings = settings;
@@ -33,6 +39,10 @@ public:
         //glDisable(GL_MULTISAMPLE);
         timer.start();
         loadstate();
+
+#ifdef MOVIESAVE
+      //  movie = qtime::MovieWriter( "/zerotheoremshared/zerotheorem.mov", 640, 480 );
+#endif
     }
 
     void setup() {
@@ -65,10 +75,19 @@ public:
         }
     }
 
+    void handleQuit() {
+#ifdef MOVIESAVE
+        movie.finish();
+#endif
+        setFullScreen(0);
+        showCursor();
+        quit();
+    }
+    
 	void keyDown( KeyEvent event ) {
 
         switch(event.getChar()) {
-            case 'q': setFullScreen(0); showCursor(); quit(); return;
+            case 'q': handleQuit(); return;
             case 'f': setFullScreen( ! isFullScreen() ); return;
             case 'm': m = 1 - m; if(!m) hideCursor(); else showCursor(); return;
             default: break;
@@ -143,8 +162,11 @@ public:
         framerate = this->getAverageFps();
         gl::popMatrices();
 
-    
-    
+#ifdef MOVIESAVE
+       // ci::Surface surface = this->copyWindowSurface();
+       // movie.addFrame(surface);
+#endif
+        
     }
 
     void mouseMove(MouseEvent event) {
